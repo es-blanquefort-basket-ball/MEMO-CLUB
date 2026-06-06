@@ -1,5 +1,5 @@
 const APP_CONFIG = {
-  appsScriptUrl: "",
+  appsScriptUrl: "https://script.google.com/macros/s/AKfycbzNUxH-a2ToXdl4K3TM8Wt54tpV_5GPO-ub9ejyEjx5vJ8JYKmLEmET1kEDVb7MA_I/exec",
   localMode: true
 };
 
@@ -377,3 +377,4 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
