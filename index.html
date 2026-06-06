@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carnet de bord ESB</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navigation">
+        <div class="brand">
+          <span class="brand-mark">ESB</span>
+          <div>
+            <h1>Carnet de bord</h1>
+            <p>Mémos appli, matériel, idées</p>
+          </div>
+        </div>
+
+        <nav class="views" id="viewNav" aria-label="Vues">
+          <button class="view-button active" data-view="new">Nouvelle note</button>
+          <button class="view-button" data-view="all">Toutes les notes</button>
+          <button class="view-button" data-view="todo">À voir</button>
+          <button class="view-button" data-view="bugs">Bugs appli</button>
+          <button class="view-button" data-view="ideas">Idées</button>
+          <button class="view-button" data-view="material">Matériel</button>
+          <button class="view-button" data-view="done">Fait / archivé</button>
+        </nav>
+
+        <section class="session-box" aria-label="Auteur">
+          <label for="userSelect">Auteur</label>
+          <select id="userSelect"></select>
+          <p id="profileHint">Carnet partagé Antoni / Vincent / Laurence</p>
+        </section>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Carnet simple</p>
+            <h2 id="viewTitle">Nouvelle note</h2>
+          </div>
+          <div class="sync-state">
+            <span id="statusDot" class="dot"></span>
+            <span id="syncText">Mode local</span>
+          </div>
+        </header>
+
+        <section id="newNotePanel" class="panel">
+          <form id="noteForm" class="note-form">
+            <div class="field full">
+              <label for="noteText">Note</label>
+              <div class="text-tools">
+                <textarea id="noteText" rows="7" placeholder="Bug appli, idée, point matériel, organisation, mémo terrain..." required></textarea>
+                <button type="button" id="micButton" class="icon-button" title="Dicter la note" aria-label="Dicter la note">Micro</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="categoryInput">Catégorie</label>
+              <select id="categoryInput" required></select>
+            </div>
+
+            <div class="field">
+              <label for="priorityInput">Priorité</label>
+              <select id="priorityInput" required></select>
+            </div>
+
+            <div class="field">
+              <label for="statusInput">Statut</label>
+              <select id="statusInput"></select>
+            </div>
+
+            <div class="field">
+              <label for="dueDateInput">Échéance</label>
+              <input id="dueDateInput" type="date">
+            </div>
+
+            <div class="field full">
+              <label for="followupInput">Réponse / suivi</label>
+              <textarea id="followupInput" rows="3" placeholder="Ce qui a été fait, par qui, ou la suite prévue"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="secondary-button">Effacer</button>
+              <button type="submit" class="primary-button">Enregistrer</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="listPanel" class="panel hidden">
+          <div class="list-toolbar">
+            <input id="searchInput" type="search" placeholder="Rechercher">
+            <select id="statusFilter" aria-label="Filtrer par statut"></select>
+          </div>
+
+          <div id="notesList" class="notes-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="noteCardTemplate">
+      <article class="note-card">
+        <div class="card-head">
+          <div>
+            <span class="category-pill"></span>
+            <h3></h3>
+          </div>
+          <span class="priority-badge"></span>
+        </div>
+        <p class="note-meta"></p>
+        <p class="note-body"></p>
+        <dl class="note-details"></dl>
+        <div class="followup-box"></div>
+        <div class="card-actions">
+          <button type="button" data-action="todo" class="secondary-button">À voir</button>
+          <button type="button" data-action="progress" class="secondary-button">En cours</button>
+          <button type="button" data-action="done" class="primary-button">Fait</button>
+          <button type="button" data-action="archive" class="danger-button">Archiver</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
