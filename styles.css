@@ -212,12 +212,6 @@ button {
   grid-column: 1 / -1;
 }
 
-.text-tools {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 88px;
-  gap: 10px;
-}
-
 textarea {
   resize: vertical;
   min-height: 48px;

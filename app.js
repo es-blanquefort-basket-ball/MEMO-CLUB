@@ -38,7 +38,6 @@ function init() {
   bindElements();
   fillStaticInputs();
   bindEvents();
-  setupSpeech();
   loadData();
 }
 
@@ -54,7 +53,6 @@ function bindElements() {
     listPanel: document.getElementById("listPanel"),
     noteForm: document.getElementById("noteForm"),
     noteText: document.getElementById("noteText"),
-    micButton: document.getElementById("micButton"),
     categoryInput: document.getElementById("categoryInput"),
     priorityInput: document.getElementById("priorityInput"),
     statusInput: document.getElementById("statusInput"),
@@ -103,34 +101,6 @@ function bindEvents() {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
     await handleNoteAction(button.closest(".note-card").dataset.id, button.dataset.action);
-  });
-}
-
-function setupSpeech() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    els.micButton.disabled = true;
-    els.micButton.title = "Dictée indisponible sur ce navigateur";
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = "fr-FR";
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  els.micButton.addEventListener("click", () => {
-    els.micButton.textContent = "Stop";
-    recognition.start();
-  });
-
-  recognition.addEventListener("result", (event) => {
-    const text = Array.from(event.results).map((result) => result[0].transcript).join(" ");
-    els.noteText.value = [els.noteText.value, text].filter(Boolean).join("\n");
-  });
-
-  recognition.addEventListener("end", () => {
-    els.micButton.textContent = "Micro";
   });
 }
 
@@ -315,13 +285,51 @@ async function saveMutation(action, payload) {
 }
 
 async function api(action, payload) {
+  if (action === "list") {
+    return jsonpRequest({ action, currentUserId: state.currentUserId });
+  }
+
   const response = await fetch(APP_CONFIG.appsScriptUrl, {
     method: "POST",
+    mode: "no-cors",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
     body: JSON.stringify({ action, currentUserId: state.currentUserId, ...payload })
   });
-  if (!response.ok) throw new Error("API indisponible");
-  return response.json();
+  return { ok: true };
+}
+
+function jsonpRequest(params) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `memoCallback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const url = new URL(APP_CONFIG.appsScriptUrl);
+    Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+    url.searchParams.set("callback", callbackName);
+
+    const script = document.createElement("script");
+    const timeout = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("Connexion Google Sheet indisponible"));
+    }, 12000);
+
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Connexion Google Sheet indisponible"));
+    };
+
+    function cleanup() {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    script.src = url.toString();
+    document.body.append(script);
+  });
 }
 
 function detailHtml(note) {

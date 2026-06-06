@@ -37,6 +37,10 @@ Seul `NOTES` est utilisé au quotidien. Les autres onglets restent disponibles p
 7. Copier l'URL du Web App dans `app.js`, champ `APP_CONFIG.appsScriptUrl`.
 8. Renseigner dans `UTILISATEURS` les emails Google autorisés pour Antoni, Vincent et Laurence.
 
+Tant que `APP_CONFIG.appsScriptUrl` est vide, l'application affiche `Mode local de démonstration` et n'écrit pas dans Google Sheet. Il faut utiliser l'URL de déploiement Web App qui se termine par `/exec`, pas l'adresse de l'éditeur Apps Script.
+
+Le micro a été retiré volontairement : sur mobile, l'autorisation navigateur peut bloquer l'interface. Le mémo reste en saisie écrite uniquement.
+
 ## Hub
 
 Le hub principal doit seulement ouvrir cette application via le bouton de `hub-button-snippet.html`.
