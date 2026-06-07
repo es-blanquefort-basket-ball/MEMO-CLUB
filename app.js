@@ -27,7 +27,11 @@ const state = {
   view: "new",
   users: DEFAULT_USERS,
   notes: [],
-  currentUserId: localStorage.getItem("carnetUserId") || "laurence"
+  currentUserId: localStorage.getItem("carnetUserId") || "laurence",
+  isSaving: false,
+  isRecording: false,
+  recognition: null,
+  recordingTimer: null
 };
 
 const els = {};
@@ -38,6 +42,7 @@ function init() {
   bindElements();
   fillStaticInputs();
   bindEvents();
+  setupSpeech();
   loadData();
 }
 
@@ -53,6 +58,9 @@ function bindElements() {
     listPanel: document.getElementById("listPanel"),
     noteForm: document.getElementById("noteForm"),
     noteText: document.getElementById("noteText"),
+    micButton: document.getElementById("micButton"),
+    submitButton: document.getElementById("submitButton"),
+    formMessage: document.getElementById("formMessage"),
     categoryInput: document.getElementById("categoryInput"),
     priorityInput: document.getElementById("priorityInput"),
     statusInput: document.getElementById("statusInput"),
@@ -102,6 +110,59 @@ function bindEvents() {
     if (!button) return;
     await handleNoteAction(button.closest(".note-card").dataset.id, button.dataset.action);
   });
+}
+
+function setupSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    els.micButton.disabled = true;
+    els.micButton.textContent = "Micro indisponible";
+    return;
+  }
+
+  state.recognition = new SpeechRecognition();
+  state.recognition.lang = "fr-FR";
+  state.recognition.continuous = false;
+  state.recognition.interimResults = false;
+
+  els.micButton.addEventListener("click", () => {
+    if (state.isRecording) {
+      state.recognition.stop();
+      finishRecording();
+      return;
+    }
+
+    try {
+      state.isRecording = true;
+      els.micButton.textContent = "Stop";
+      showFormMessage("Dictée en cours...", "info");
+      state.recordingTimer = window.setTimeout(() => state.recognition.stop(), 15000);
+      state.recognition.start();
+    } catch (error) {
+      finishRecording();
+      showFormMessage("Micro indisponible sur ce navigateur.", "error");
+    }
+  });
+
+  state.recognition.addEventListener("result", (event) => {
+    const text = Array.from(event.results).map((result) => result[0].transcript).join(" ");
+    els.noteText.value = [els.noteText.value, text].filter(Boolean).join("\n");
+    showFormMessage("Dictée ajoutée.", "success");
+  });
+
+  state.recognition.addEventListener("error", () => {
+    finishRecording();
+    showFormMessage("Micro refusé ou indisponible.", "error");
+  });
+
+  state.recognition.addEventListener("end", finishRecording);
+}
+
+function finishRecording() {
+  state.isRecording = false;
+  window.clearTimeout(state.recordingTimer);
+  state.recordingTimer = null;
+  if (els.micButton) els.micButton.textContent = "Dicter";
 }
 
 async function loadData() {
@@ -233,6 +294,7 @@ function getFilteredNotes() {
 }
 
 async function createNote() {
+  if (state.isSaving) return;
   const user = getCurrentUser();
   const now = new Date().toISOString();
   const note = {
@@ -251,19 +313,45 @@ async function createNote() {
 
   if (!note.text || !note.category) return;
 
-  await saveMutation("createNote", { note });
-  state.notes.unshift(note);
-  persistLocalData();
-  els.noteForm.reset();
-  els.categoryInput.value = "Bug appli";
-  els.priorityInput.value = "Normale";
-  els.statusInput.value = "Nouveau";
-  setView("all");
+  state.isSaving = true;
+  els.submitButton.disabled = true;
+  els.submitButton.textContent = "Enregistrement...";
+  showFormMessage("Enregistrement en cours...", "info");
+
+  try {
+    await saveMutation("createNote", { note });
+    state.notes.unshift(note);
+    persistLocalData();
+    els.noteForm.reset();
+    els.categoryInput.value = "Bug appli";
+    els.priorityInput.value = "Normale";
+    els.statusInput.value = "Nouveau";
+    showFormMessage("Note enregistrée.", "success");
+    setSync("Note enregistrée", true);
+    setView("all");
+  } catch (error) {
+    showFormMessage("Enregistrement impossible. Réessaie dans un instant.", "error");
+  } finally {
+    state.isSaving = false;
+    els.submitButton.disabled = false;
+    els.submitButton.textContent = "Enregistrer";
+  }
 }
 
 async function handleNoteAction(noteId, action) {
   const note = state.notes.find((item) => item.id === noteId);
   if (!note) return;
+  if (action === "delete") {
+    const confirmed = window.confirm("Supprimer cette note ?");
+    if (!confirmed) return;
+    await saveMutation("deleteNote", { noteId });
+    state.notes = state.notes.filter((item) => item.id !== noteId);
+    persistLocalData();
+    setSync("Note supprimée", true);
+    renderNotes();
+    return;
+  }
+
   const now = new Date().toISOString();
   const nextStatus = {
     todo: "À voir",
@@ -369,6 +457,11 @@ function setSync(text, online, error = false) {
   els.statusDot.classList.toggle("error", error);
 }
 
+function showFormMessage(text, type = "info") {
+  els.formMessage.textContent = text;
+  els.formMessage.dataset.type = type;
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")
@@ -377,4 +470,3 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-

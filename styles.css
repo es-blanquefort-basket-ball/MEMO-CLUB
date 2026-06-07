@@ -253,7 +253,8 @@ textarea {
 
 .form-actions,
 .card-actions,
-.list-toolbar {
+.list-toolbar,
+.voice-tools {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -262,6 +263,26 @@ textarea {
 
 .form-actions {
   grid-column: 1 / -1;
+}
+
+.voice-tools {
+  justify-content: flex-start;
+}
+
+.form-message {
+  grid-column: 1 / -1;
+  min-height: 22px;
+  margin: -6px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.form-message[data-type="success"] {
+  color: var(--green-dark);
+}
+
+.form-message[data-type="error"] {
+  color: var(--red);
 }
 
 .list-toolbar {

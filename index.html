@@ -51,6 +51,9 @@
             <div class="field full">
               <label for="noteText">Note</label>
               <textarea id="noteText" rows="7" placeholder="Bug appli, idée, point matériel, organisation, mémo terrain..." required></textarea>
+              <div class="voice-tools">
+                <button type="button" id="micButton" class="secondary-button">Dicter</button>
+              </div>
             </div>
 
             <div class="field">
@@ -80,8 +83,9 @@
 
             <div class="form-actions">
               <button type="reset" class="secondary-button">Effacer</button>
-              <button type="submit" class="primary-button">Enregistrer</button>
+              <button type="submit" id="submitButton" class="primary-button">Enregistrer</button>
             </div>
+            <p id="formMessage" class="form-message" role="status" aria-live="polite"></p>
           </form>
         </section>
 
@@ -114,6 +118,7 @@
           <button type="button" data-action="progress" class="secondary-button">En cours</button>
           <button type="button" data-action="done" class="primary-button">Fait</button>
           <button type="button" data-action="archive" class="danger-button">Archiver</button>
+          <button type="button" data-action="delete" class="danger-button">Supprimer</button>
         </div>
       </article>
     </template>
