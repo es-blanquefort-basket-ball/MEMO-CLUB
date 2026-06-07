@@ -59,6 +59,7 @@ function bindElements() {
     noteForm: document.getElementById("noteForm"),
     noteText: document.getElementById("noteText"),
     micButton: document.getElementById("micButton"),
+    voiceIndicator: document.getElementById("voiceIndicator"),
     submitButton: document.getElementById("submitButton"),
     formMessage: document.getElementById("formMessage"),
     categoryInput: document.getElementById("categoryInput"),
@@ -135,6 +136,8 @@ function setupSpeech() {
     try {
       state.isRecording = true;
       els.micButton.textContent = "Stop";
+      els.micButton.classList.add("recording");
+      els.voiceIndicator.classList.add("active");
       showFormMessage("Dictée en cours...", "info");
       state.recordingTimer = window.setTimeout(() => state.recognition.stop(), 15000);
       state.recognition.start();
@@ -163,6 +166,8 @@ function finishRecording() {
   window.clearTimeout(state.recordingTimer);
   state.recordingTimer = null;
   if (els.micButton) els.micButton.textContent = "Dicter";
+  if (els.micButton) els.micButton.classList.remove("recording");
+  if (els.voiceIndicator) els.voiceIndicator.classList.remove("active");
 }
 
 async function loadData() {
