@@ -72,6 +72,7 @@ function bindElements() {
     imageInput: document.getElementById("imageInput"),
     imagePreview: document.getElementById("imagePreview"),
     clearImageButton: document.getElementById("clearImageButton"),
+    statusSummary: document.getElementById("statusSummary"),
     searchInput: document.getElementById("searchInput"),
     statusFilter: document.getElementById("statusFilter"),
     notesList: document.getElementById("notesList"),
@@ -267,11 +268,53 @@ function render() {
   els.viewTitle.textContent = titles[state.view];
   els.newNotePanel.classList.toggle("hidden", state.view !== "new");
   els.listPanel.classList.toggle("hidden", state.view === "new");
+  renderCounters();
   if (state.view !== "new") renderNotes();
+}
+
+function renderCounters() {
+  const counts = getCounts();
+  document.querySelectorAll("[data-count]").forEach((item) => {
+    item.textContent = counts[item.dataset.count] ?? 0;
+  });
+
+  els.statusSummary.innerHTML = [
+    ["Nouveau", counts.status.Nouveau],
+    ["À voir", counts.status["À voir"]],
+    ["En cours", counts.status["En cours"]],
+    ["Répondu", counts.status["Répondu"]],
+    ["Archivé", counts.status["Archivé"]]
+  ].map(([label, value]) => `<span class="summary-pill"><strong>${value}</strong>${label}</span>`).join("");
+}
+
+function getCounts() {
+  const status = {
+    Nouveau: 0,
+    "À voir": 0,
+    "En cours": 0,
+    "Répondu": 0,
+    Archivé: 0
+  };
+
+  state.notes.forEach((note) => {
+    const normalizedStatus = note.status === "Fait" ? "Répondu" : note.status;
+    if (status[normalizedStatus] !== undefined) status[normalizedStatus] += 1;
+  });
+
+  return {
+    all: state.notes.length,
+    todo: state.notes.filter((note) => ["Nouveau", "À voir", "En cours"].includes(note.status)).length,
+    bugs: state.notes.filter((note) => normalize(note.category).includes("bug")).length,
+    ideas: state.notes.filter((note) => normalize(note.category).includes("idee")).length,
+    material: state.notes.filter((note) => normalize(note.category).includes("materiel")).length,
+    done: state.notes.filter((note) => ["Répondu", "Fait", "Archivé"].includes(note.status)).length,
+    status
+  };
 }
 
 function renderNotes() {
   const notes = getFilteredNotes();
+  renderCounters();
   els.notesList.innerHTML = "";
 
   if (!notes.length) {

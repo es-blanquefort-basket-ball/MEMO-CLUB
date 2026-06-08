@@ -18,13 +18,13 @@
         </div>
 
         <nav class="views" id="viewNav" aria-label="Vues">
-          <button class="view-button active" data-view="new">Nouvelle note</button>
-          <button class="view-button" data-view="all">Toutes les notes</button>
-          <button class="view-button" data-view="todo">À voir</button>
-          <button class="view-button" data-view="bugs">Bugs appli</button>
-          <button class="view-button" data-view="ideas">Idées</button>
-          <button class="view-button" data-view="material">Matériel</button>
-          <button class="view-button" data-view="done">Répondu / archivé</button>
+          <button class="view-button active" data-view="new"><span>Nouvelle note</span></button>
+          <button class="view-button" data-view="all"><span>Toutes les notes</span><span class="view-count" data-count="all">0</span></button>
+          <button class="view-button" data-view="todo"><span>À voir</span><span class="view-count" data-count="todo">0</span></button>
+          <button class="view-button" data-view="bugs"><span>Bugs appli</span><span class="view-count" data-count="bugs">0</span></button>
+          <button class="view-button" data-view="ideas"><span>Idées</span><span class="view-count" data-count="ideas">0</span></button>
+          <button class="view-button" data-view="material"><span>Matériel</span><span class="view-count" data-count="material">0</span></button>
+          <button class="view-button" data-view="done"><span>Répondu / archivé</span><span class="view-count" data-count="done">0</span></button>
         </nav>
 
         <section class="session-box" aria-label="Auteur">
@@ -108,6 +108,7 @@
         </section>
 
         <section id="listPanel" class="panel hidden">
+          <div id="statusSummary" class="status-summary" aria-label="Résumé des notes"></div>
           <div class="list-toolbar">
             <input id="searchInput" type="search" placeholder="Rechercher">
             <select id="statusFilter" aria-label="Filtrer par statut"></select>
