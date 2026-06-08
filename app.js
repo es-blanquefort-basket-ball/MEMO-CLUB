@@ -406,6 +406,7 @@ async function createNote() {
     imageName: state.pendingImage?.name || "",
     imageType: state.pendingImage?.type || "",
     imageData: state.pendingImage?.dataUrl || "",
+    imagePreview: state.pendingImage?.previewUrl || "",
     imageUrl: state.pendingImage?.dataUrl || ""
   };
 
@@ -496,7 +497,8 @@ function resizeImage(file) {
         resolve({
           name: file.name,
           type: "image/jpeg",
-          dataUrl: canvas.toDataURL("image/jpeg", 0.78)
+          dataUrl: canvas.toDataURL("image/jpeg", 0.78),
+          previewUrl: makePreviewDataUrl(img)
         });
       };
       img.src = reader.result;
@@ -637,15 +639,42 @@ function detailHtml(note) {
 function renderNoteImage(card, note) {
   const link = card.querySelector(".note-image-link");
   const image = card.querySelector(".note-image");
-  const src = note.imageThumbUrl || note.imageUrl;
+  const src = note.imagePreview || note.imageThumbUrl || note.imageUrl;
   if (!src) {
     link.classList.add("hidden");
+    link.removeAttribute("href");
     return;
   }
 
-  link.href = note.imageUrl || src;
+  const href = getUsableImageHref(note, src);
+  if (!href) {
+    link.classList.add("hidden");
+    link.removeAttribute("href");
+    return;
+  }
+
+  link.href = href;
   image.src = src;
   link.classList.remove("hidden");
+}
+
+function makePreviewDataUrl(img) {
+  const maxSize = 260;
+  const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
+  const width = Math.round(img.width * ratio);
+  const height = Math.round(img.height * ratio);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.drawImage(img, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.55);
+}
+
+function getUsableImageHref(note, fallback) {
+  const candidate = note.imageUrl || fallback;
+  if (!candidate || candidate === "#") return "";
+  return candidate;
 }
 
 function renderReplies(card, noteId) {

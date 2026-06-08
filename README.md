@@ -11,7 +11,7 @@ Mini-application indépendante pour les mémos d'Antoni, Vincent et Laurence : b
 - Statut simple : `Nouveau`, `À voir`, `En cours`, `Répondu`, `Archivé`.
 - Échéance.
 - Précision optionnelle.
-- Image optionnelle, utile pour joindre une capture d'écran à un bug.
+- Image optionnelle, utile pour joindre une capture d'écran à un bug. Une petite miniature est gardée avec la note pour éviter les aperçus Drive capricieux.
 - Réponses sous chaque note, comme un mini fil de discussion.
 
 Les champs destinataire, assigné à, visibilité, historique de lecture et prise en charge ont été retirés pour garder un vrai carnet simple.
