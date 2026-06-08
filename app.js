@@ -3,7 +3,7 @@ const APP_CONFIG = {
   localMode: true
 };
 
-const STATUSES = ["Nouveau", "À voir", "En cours", "Fait", "Archivé"];
+const STATUSES = ["Nouveau", "À voir", "En cours", "Répondu", "Archivé"];
 const CATEGORIES = [
   "Bug appli",
   "Idée",
@@ -27,6 +27,7 @@ const state = {
   view: "new",
   users: DEFAULT_USERS,
   notes: [],
+  replies: [],
   currentUserId: localStorage.getItem("carnetUserId") || "laurence",
   isSaving: false,
   isRecording: false,
@@ -111,6 +112,13 @@ function bindEvents() {
     if (!button) return;
     await handleNoteAction(button.closest(".note-card").dataset.id, button.dataset.action);
   });
+
+  els.notesList.addEventListener("submit", async (event) => {
+    const form = event.target.closest(".reply-form");
+    if (!form) return;
+    event.preventDefault();
+    await createReply(form.closest(".note-card").dataset.id, form);
+  });
 }
 
 function setupSpeech() {
@@ -178,15 +186,18 @@ async function loadData() {
       state.users = data.users?.length ? data.users : DEFAULT_USERS;
       if (data.currentUser?.id) state.currentUserId = data.currentUser.id;
       state.notes = data.notes || [];
+      state.replies = data.replies || [];
       setSync("Connecté au Google Sheet", true);
     } else {
       state.users = DEFAULT_USERS;
       state.notes = JSON.parse(localStorage.getItem("carnetNotes") || "[]");
+      state.replies = JSON.parse(localStorage.getItem("carnetReplies") || "[]");
       setSync("Mode local de démonstration", false);
     }
   } catch (error) {
     state.users = DEFAULT_USERS;
     state.notes = JSON.parse(localStorage.getItem("carnetNotes") || "[]");
+    state.replies = JSON.parse(localStorage.getItem("carnetReplies") || "[]");
     setSync("Connexion indisponible", false, true);
   }
   hydrateUsers();
@@ -195,6 +206,7 @@ async function loadData() {
 
 function persistLocalData() {
   localStorage.setItem("carnetNotes", JSON.stringify(state.notes));
+  localStorage.setItem("carnetReplies", JSON.stringify(state.replies));
 }
 
 function hydrateUsers() {
@@ -243,7 +255,7 @@ function render() {
     bugs: "Bugs appli",
     ideas: "Idées",
     material: "Matériel",
-    done: "Fait / archivé"
+    done: "Répondu / archivé"
   };
   els.viewTitle.textContent = titles[state.view];
   els.newNotePanel.classList.toggle("hidden", state.view !== "new");
@@ -269,7 +281,10 @@ function renderNotes() {
     card.querySelector(".note-meta").textContent = `${formatDate(note.createdAt)} - ${note.authorName} - ${note.status}`;
     card.querySelector(".note-body").textContent = note.text;
     card.querySelector(".note-details").innerHTML = detailHtml(note);
-    card.querySelector(".followup-box").textContent = note.followup || "Aucun suivi renseigné.";
+    const followupBox = card.querySelector(".followup-box");
+    followupBox.classList.toggle("hidden", !note.followup);
+    followupBox.textContent = note.followup ? `Précision : ${note.followup}` : "";
+    renderReplies(card, note.id);
     els.notesList.append(card);
   });
 }
@@ -284,13 +299,13 @@ function getFilteredNotes() {
       if (state.view === "bugs") return normalize(note.category).includes("bug");
       if (state.view === "ideas") return normalize(note.category).includes("idee");
       if (state.view === "material") return normalize(note.category).includes("materiel");
-      if (state.view === "done") return ["Fait", "Archivé"].includes(note.status);
+      if (state.view === "done") return ["Répondu", "Fait", "Archivé"].includes(note.status);
       return true;
     })
     .filter((note) => statusFilter === "Tous les statuts" || note.status === statusFilter)
     .filter((note) => {
       if (!query) return true;
-      return [note.text, note.category, note.status, note.followup, note.authorName]
+      return [note.text, note.category, note.status, note.followup, note.authorName, getReplies(note.id).map((reply) => reply.text).join(" ")]
         .join(" ")
         .toLowerCase()
         .includes(query);
@@ -361,7 +376,7 @@ async function handleNoteAction(noteId, action) {
   const nextStatus = {
     todo: "À voir",
     progress: "En cours",
-    done: "Fait",
+    done: "Répondu",
     archive: "Archivé"
   }[action];
 
@@ -370,6 +385,43 @@ async function handleNoteAction(noteId, action) {
   await saveMutation("updateStatus", { noteId, status: nextStatus, updatedAt: now });
   persistLocalData();
   renderNotes();
+}
+
+async function createReply(noteId, form) {
+  const textarea = form.elements.replyText;
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  const user = getCurrentUser();
+  const now = new Date().toISOString();
+  const reply = {
+    id: crypto.randomUUID(),
+    noteId,
+    createdAt: now,
+    authorId: user.id,
+    authorName: user.name,
+    text
+  };
+  const button = form.querySelector("button");
+  button.disabled = true;
+  button.textContent = "Envoi...";
+
+  try {
+    await saveMutation("addReply", { reply });
+    state.replies.push(reply);
+    const note = state.notes.find((item) => item.id === noteId);
+    if (note && note.status !== "Archivé") {
+      note.status = "Répondu";
+      note.updatedAt = now;
+    }
+    textarea.value = "";
+    persistLocalData();
+    setSync("Réponse ajoutée", true);
+    renderNotes();
+  } finally {
+    button.disabled = false;
+    button.textContent = "Répondre";
+  }
 }
 
 async function saveMutation(action, payload) {
@@ -428,9 +480,32 @@ function jsonpRequest(params) {
 function detailHtml(note) {
   const details = [
     ["Échéance", note.dueDate || "Aucune"],
+    ["Réponses", getReplies(note.id).length],
     ["Mise à jour", formatDate(note.updatedAt)]
   ];
   return details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd></div>`).join("");
+}
+
+function renderReplies(card, noteId) {
+  const repliesList = card.querySelector(".replies-list");
+  const replies = getReplies(noteId);
+  if (!replies.length) {
+    repliesList.innerHTML = '<p class="reply-empty">Aucune réponse pour le moment.</p>';
+    return;
+  }
+  repliesList.innerHTML = replies
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+    .map((reply) => `
+      <article class="reply-item">
+        <p class="reply-meta">${escapeHtml(reply.authorName)} - ${escapeHtml(formatDate(reply.createdAt))}</p>
+        <p>${escapeHtml(reply.text)}</p>
+      </article>
+    `)
+    .join("");
+}
+
+function getReplies(noteId) {
+  return state.replies.filter((reply) => reply.noteId === noteId);
 }
 
 function noteTitle(note) {

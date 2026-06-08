@@ -8,9 +8,10 @@ Mini-application indépendante pour les mémos d'Antoni, Vincent et Laurence : b
 - Note.
 - Catégorie, avec suggestions mais saisie libre possible.
 - Priorité.
-- Statut simple : `Nouveau`, `À voir`, `En cours`, `Fait`, `Archivé`.
+- Statut simple : `Nouveau`, `À voir`, `En cours`, `Répondu`, `Archivé`.
 - Échéance.
-- Réponse / suivi.
+- Précision optionnelle.
+- Réponses sous chaque note, comme un mini fil de discussion.
 
 Les champs destinataire, assigné à, visibilité, historique de lecture et prise en charge ont été retirés pour garder un vrai carnet simple.
 
@@ -23,8 +24,9 @@ Le script `apps-script/Code.gs` crée ou utilise le fichier `CARNET_BORD_ESB` av
 - `UTILISATEURS`
 - `PARAMETRES`
 - `ARCHIVES`
+- `REPONSES`
 
-Seul `NOTES` est utilisé au quotidien. Les autres onglets restent disponibles pour compatibilité et évolutions.
+`NOTES` contient les mémos. `REPONSES` contient les réponses liées à chaque note.
 
 ## Mise en service
 

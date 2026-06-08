@@ -24,7 +24,7 @@
           <button class="view-button" data-view="bugs">Bugs appli</button>
           <button class="view-button" data-view="ideas">Idées</button>
           <button class="view-button" data-view="material">Matériel</button>
-          <button class="view-button" data-view="done">Fait / archivé</button>
+          <button class="view-button" data-view="done">Répondu / archivé</button>
         </nav>
 
         <section class="session-box" aria-label="Auteur">
@@ -88,8 +88,8 @@
             </div>
 
             <div class="field full">
-              <label for="followupInput">Réponse / suivi</label>
-              <textarea id="followupInput" rows="3" placeholder="Ce qui a été fait, par qui, ou la suite prévue"></textarea>
+              <label for="followupInput">Précision optionnelle</label>
+              <textarea id="followupInput" rows="3" placeholder="Contexte, détail utile, lien, précision de départ"></textarea>
             </div>
 
             <div class="form-actions">
@@ -124,10 +124,18 @@
         <p class="note-body"></p>
         <dl class="note-details"></dl>
         <div class="followup-box"></div>
+        <section class="reply-thread">
+          <h4>Réponses</h4>
+          <div class="replies-list"></div>
+          <form class="reply-form">
+            <textarea name="replyText" rows="2" placeholder="Répondre à cette note"></textarea>
+            <button type="submit" class="primary-button">Répondre</button>
+          </form>
+        </section>
         <div class="card-actions">
           <button type="button" data-action="todo" class="secondary-button">À voir</button>
           <button type="button" data-action="progress" class="secondary-button">En cours</button>
-          <button type="button" data-action="done" class="primary-button">Fait</button>
+          <button type="button" data-action="done" class="primary-button">Répondu</button>
           <button type="button" data-action="archive" class="danger-button">Archiver</button>
           <button type="button" data-action="delete" class="danger-button">Supprimer</button>
         </div>

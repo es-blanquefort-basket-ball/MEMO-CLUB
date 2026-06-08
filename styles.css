@@ -468,6 +468,57 @@ textarea {
   color: #213644;
 }
 
+.reply-thread {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.reply-thread h4 {
+  margin: 0 0 10px;
+  font-size: 0.94rem;
+}
+
+.replies-list {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reply-item {
+  background: #f7faf8;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.reply-item p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.reply-meta,
+.reply-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.reply-meta {
+  margin-bottom: 5px !important;
+  font-weight: 800;
+}
+
+.reply-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.reply-form textarea {
+  min-height: 42px;
+}
+
 .empty-state {
   text-align: center;
   color: var(--muted);
@@ -503,6 +554,10 @@ textarea {
 
   .note-details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reply-form {
+    grid-template-columns: 1fr;
   }
 }
 
