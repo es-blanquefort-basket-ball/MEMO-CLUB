@@ -297,7 +297,7 @@ function getCounts() {
   };
 
   state.notes.forEach((note) => {
-    const normalizedStatus = note.status === "Fait" ? "Répondu" : note.status;
+    const normalizedStatus = normalizeStatus(note.status);
     if (status[normalizedStatus] !== undefined) status[normalizedStatus] += 1;
   });
 
@@ -328,6 +328,7 @@ function renderNotes() {
     card.querySelector(".category-pill").textContent = note.category;
     card.querySelector("h3").textContent = noteTitle(note);
     card.querySelector(".priority-badge").textContent = note.priority;
+    card.dataset.status = normalizeStatus(note.status);
     card.querySelector(".note-meta").textContent = `${formatDate(note.createdAt)} - ${note.authorName} - ${note.status}`;
     card.querySelector(".note-body").textContent = note.text;
     renderNoteImage(card, note);
@@ -336,7 +337,29 @@ function renderNotes() {
     followupBox.classList.toggle("hidden", !note.followup);
     followupBox.textContent = note.followup ? `Précision : ${note.followup}` : "";
     renderReplies(card, note.id);
+    renderActionChips(card, note);
     els.notesList.append(card);
+  });
+}
+
+function renderActionChips(card, note) {
+  const currentStatus = normalizeStatus(note.status);
+  const actionStatus = {
+    todo: "À voir",
+    progress: "En cours",
+    done: "Répondu",
+    archive: "Archivé"
+  };
+
+  card.querySelectorAll("[data-action]").forEach((button) => {
+    const status = actionStatus[button.dataset.action];
+    const isCurrent = status === currentStatus;
+    button.classList.toggle("active", isCurrent);
+    if (isCurrent) {
+      button.setAttribute("aria-current", "true");
+    } else {
+      button.removeAttribute("aria-current");
+    }
   });
 }
 
@@ -603,7 +626,7 @@ function jsonpRequest(params) {
 
 function detailHtml(note) {
   const details = [
-    ["Échéance", note.dueDate || "Aucune"],
+    ["Échéance", formatDateOnly(note.dueDate) || "Aucune"],
     ["Image", note.imageUrl ? "Oui" : "Non"],
     ["Réponses", getReplies(note.id).length],
     ["Mise à jour", formatDate(note.updatedAt)]
@@ -662,12 +685,23 @@ function normalize(value) {
     .toLowerCase();
 }
 
+function normalizeStatus(status) {
+  return status === "Fait" ? "Répondu" : status;
+}
+
 function formatDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "short",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function formatDateOnly(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(date);
 }
 
 function setSync(text, online, error = false) {

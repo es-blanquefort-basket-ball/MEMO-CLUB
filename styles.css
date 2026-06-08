@@ -110,11 +110,18 @@ button {
   background: transparent;
 }
 
+.view-button > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
 .view-count {
   min-width: 28px;
   min-height: 24px;
   display: inline-grid;
   place-items: center;
+  flex: 0 0 auto;
+  margin-left: 8px;
   border-radius: 999px;
   padding: 2px 8px;
   background: rgba(255, 255, 255, 0.16);
@@ -237,7 +244,8 @@ textarea {
 .icon-button,
 .primary-button,
 .secondary-button,
-.danger-button {
+.danger-button,
+.action-chip {
   min-height: 42px;
   border-radius: 8px;
   border: 1px solid transparent;
@@ -266,6 +274,76 @@ textarea {
   background: #fff5f4;
   border-color: #f2c3bf;
   color: var(--red);
+}
+
+.action-chip {
+  min-height: 34px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.88rem;
+  line-height: 1;
+  background: #ffffff;
+  border-color: var(--line);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.action-chip:hover {
+  transform: translateY(-1px);
+}
+
+.chip-todo {
+  border-color: #ead6a9;
+  color: #7a4b10;
+  background: #fffaf0;
+}
+
+.chip-todo.active {
+  background: #b7791f;
+  border-color: #b7791f;
+  color: #ffffff;
+}
+
+.chip-progress {
+  border-color: #b9d2e4;
+  color: #22577a;
+  background: #f2f7fa;
+}
+
+.chip-progress.active {
+  background: #22577a;
+  border-color: #22577a;
+  color: #ffffff;
+}
+
+.chip-done {
+  border-color: #bfdccf;
+  color: #15583c;
+  background: #f0f8f4;
+}
+
+.chip-done.active {
+  background: #1f7a54;
+  border-color: #1f7a54;
+  color: #ffffff;
+}
+
+.chip-archive {
+  border-color: #d1d5db;
+  color: #4b5563;
+  background: #f8fafc;
+}
+
+.chip-archive.active {
+  background: #4b5563;
+  border-color: #4b5563;
+  color: #ffffff;
+}
+
+.chip-delete {
+  border-color: #f2c3bf;
+  color: var(--red);
+  background: #fff8f7;
 }
 
 .form-actions,
@@ -588,13 +666,18 @@ textarea {
 
 .reply-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 132px;
   gap: 10px;
   align-items: start;
+  margin-bottom: 14px;
 }
 
 .reply-form textarea {
   min-height: 42px;
+}
+
+.reply-form .primary-button {
+  width: 100%;
 }
 
 .empty-state {
