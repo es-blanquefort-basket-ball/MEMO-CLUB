@@ -32,7 +32,8 @@ const state = {
   isSaving: false,
   isRecording: false,
   recognition: null,
-  recordingTimer: null
+  recordingTimer: null,
+  pendingImage: null
 };
 
 const els = {};
@@ -68,6 +69,9 @@ function bindElements() {
     statusInput: document.getElementById("statusInput"),
     dueDateInput: document.getElementById("dueDateInput"),
     followupInput: document.getElementById("followupInput"),
+    imageInput: document.getElementById("imageInput"),
+    imagePreview: document.getElementById("imagePreview"),
+    clearImageButton: document.getElementById("clearImageButton"),
     searchInput: document.getElementById("searchInput"),
     statusFilter: document.getElementById("statusFilter"),
     notesList: document.getElementById("notesList"),
@@ -106,6 +110,8 @@ function bindEvents() {
 
   els.searchInput.addEventListener("input", renderNotes);
   els.statusFilter.addEventListener("change", renderNotes);
+  els.imageInput.addEventListener("change", handleImageSelection);
+  els.clearImageButton.addEventListener("click", clearPendingImage);
 
   els.notesList.addEventListener("click", async (event) => {
     const button = event.target.closest("button[data-action]");
@@ -205,6 +211,7 @@ async function loadData() {
 }
 
 function persistLocalData() {
+  if (APP_CONFIG.appsScriptUrl) return;
   localStorage.setItem("carnetNotes", JSON.stringify(state.notes));
   localStorage.setItem("carnetReplies", JSON.stringify(state.replies));
 }
@@ -280,6 +287,7 @@ function renderNotes() {
     card.querySelector(".priority-badge").textContent = note.priority;
     card.querySelector(".note-meta").textContent = `${formatDate(note.createdAt)} - ${note.authorName} - ${note.status}`;
     card.querySelector(".note-body").textContent = note.text;
+    renderNoteImage(card, note);
     card.querySelector(".note-details").innerHTML = detailHtml(note);
     const followupBox = card.querySelector(".followup-box");
     followupBox.classList.toggle("hidden", !note.followup);
@@ -328,7 +336,11 @@ async function createNote() {
     priority: els.priorityInput.value,
     status: els.statusInput.value,
     dueDate: els.dueDateInput.value,
-    followup: els.followupInput.value.trim()
+    followup: els.followupInput.value.trim(),
+    imageName: state.pendingImage?.name || "",
+    imageType: state.pendingImage?.type || "",
+    imageData: state.pendingImage?.dataUrl || "",
+    imageUrl: state.pendingImage?.dataUrl || ""
   };
 
   if (!note.text || !note.category) return;
@@ -340,9 +352,11 @@ async function createNote() {
 
   try {
     await saveMutation("createNote", { note });
+    note.imageData = "";
     state.notes.unshift(note);
     persistLocalData();
     els.noteForm.reset();
+    clearPendingImage();
     els.categoryInput.value = "Bug appli";
     els.priorityInput.value = "Normale";
     els.statusInput.value = "Nouveau";
@@ -356,6 +370,73 @@ async function createNote() {
     els.submitButton.disabled = false;
     els.submitButton.textContent = "Enregistrer";
   }
+}
+
+async function handleImageSelection() {
+  const file = els.imageInput.files?.[0];
+  if (!file) {
+    clearPendingImage();
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    clearPendingImage();
+    showFormMessage("Le fichier choisi n'est pas une image.", "error");
+    return;
+  }
+
+  showFormMessage("Préparation de l'image...", "info");
+  try {
+    const image = await resizeImage(file);
+    state.pendingImage = image;
+    els.imagePreview.innerHTML = `
+      <img src="${image.dataUrl}" alt="Aperçu de l'image">
+      <span>${escapeHtml(image.name)}</span>
+    `;
+    els.imagePreview.classList.remove("hidden");
+    els.clearImageButton.classList.remove("hidden");
+    showFormMessage("Image ajoutée à la note.", "success");
+  } catch (error) {
+    clearPendingImage();
+    showFormMessage("Image impossible à préparer.", "error");
+  }
+}
+
+function clearPendingImage() {
+  state.pendingImage = null;
+  els.imageInput.value = "";
+  els.imagePreview.innerHTML = "";
+  els.imagePreview.classList.add("hidden");
+  els.clearImageButton.classList.add("hidden");
+}
+
+function resizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const maxSize = 1400;
+        const ratio = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const width = Math.round(img.width * ratio);
+        const height = Math.round(img.height * ratio);
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0, width, height);
+        resolve({
+          name: file.name,
+          type: "image/jpeg",
+          dataUrl: canvas.toDataURL("image/jpeg", 0.78)
+        });
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 async function handleNoteAction(noteId, action) {
@@ -480,10 +561,25 @@ function jsonpRequest(params) {
 function detailHtml(note) {
   const details = [
     ["Échéance", note.dueDate || "Aucune"],
+    ["Image", note.imageUrl ? "Oui" : "Non"],
     ["Réponses", getReplies(note.id).length],
     ["Mise à jour", formatDate(note.updatedAt)]
   ];
   return details.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(String(value))}</dd></div>`).join("");
+}
+
+function renderNoteImage(card, note) {
+  const link = card.querySelector(".note-image-link");
+  const image = card.querySelector(".note-image");
+  const src = note.imageThumbUrl || note.imageUrl;
+  if (!src) {
+    link.classList.add("hidden");
+    return;
+  }
+
+  link.href = note.imageUrl || src;
+  image.src = src;
+  link.classList.remove("hidden");
 }
 
 function renderReplies(card, noteId) {

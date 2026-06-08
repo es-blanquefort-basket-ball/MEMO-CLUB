@@ -92,6 +92,13 @@
               <textarea id="followupInput" rows="3" placeholder="Contexte, détail utile, lien, précision de départ"></textarea>
             </div>
 
+            <div class="field full">
+              <label for="imageInput">Image optionnelle</label>
+              <input id="imageInput" type="file" accept="image/*">
+              <div id="imagePreview" class="image-preview hidden"></div>
+              <button type="button" id="clearImageButton" class="secondary-button hidden">Retirer l'image</button>
+            </div>
+
             <div class="form-actions">
               <button type="reset" class="secondary-button">Effacer</button>
               <button type="submit" id="submitButton" class="primary-button">Enregistrer</button>
@@ -122,6 +129,10 @@
         </div>
         <p class="note-meta"></p>
         <p class="note-body"></p>
+        <a class="note-image-link hidden" href="#" target="_blank" rel="noopener">
+          <img class="note-image" alt="Image jointe à la note">
+          <span>Ouvrir l'image</span>
+        </a>
         <dl class="note-details"></dl>
         <div class="followup-box"></div>
         <section class="reply-thread">

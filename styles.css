@@ -373,6 +373,26 @@ textarea {
   color: var(--red);
 }
 
+.image-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px;
+  background: #f7faf8;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.image-preview img {
+  width: 84px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
 .list-toolbar {
   justify-content: space-between;
   margin-bottom: 16px;
@@ -435,6 +455,24 @@ textarea {
 .note-body {
   white-space: pre-wrap;
   line-height: 1.5;
+}
+
+.note-image-link {
+  display: inline-grid;
+  gap: 7px;
+  margin: 8px 0 12px;
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.note-image {
+  width: min(100%, 420px);
+  max-height: 280px;
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7faf8;
 }
 
 .note-details {
